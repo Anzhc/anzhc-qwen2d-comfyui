@@ -28,12 +28,6 @@ def _is_qwen2d_state_dict(sd):
     return sd["decoder.conv_in.weight"].ndim == 4
 
 
-def _maybe_convert_diffusers_vae_state_dict(sd):
-    if sd is not None and "decoder.up_blocks.0.resnets.0.norm1.weight" in sd:
-        return comfy_sd.diffusers_convert.convert_vae_state_dict(sd)
-    return sd
-
-
 def _init_common_vae_defaults(vae):
     if model_management.is_amd():
         vae_kl_mem_ratio = 2.73
@@ -305,7 +299,6 @@ def install_qwen2d_patch():
     original_init = comfy_sd.VAE.__init__
 
     def patched_init(self, sd=None, device=None, config=None, dtype=None, metadata=None):
-        sd = _maybe_convert_diffusers_vae_state_dict(sd)
         if config is None and _is_qwen2d_state_dict(sd):
             _init_qwen2d_vae(self, sd, device=device, dtype=dtype)
             return
